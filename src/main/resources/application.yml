@@ -1,0 +1,6 @@
+spring:
+  jpa:
+    properties:
+      hibernate:
+        batch_fetch_style: dynamic
+        default_batch_fetch_size: 20 
