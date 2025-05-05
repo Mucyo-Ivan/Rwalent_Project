@@ -4,11 +4,15 @@ import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.util.Collection;
 import java.util.List;
 
 @Entity
+@Data
 @Table(name = "users")
 public class User implements UserDetails {
     
@@ -29,6 +33,11 @@ public class User implements UserDetails {
     private String phoneNumber;
     
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserType userType;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true, columnDefinition = "VARCHAR(50)")
     private TalentCategory category;
     
     @Column(nullable = true)
@@ -43,27 +52,47 @@ public class User implements UserDetails {
     @Column(nullable = true)
     private String photoUrl;
     
-    @Enumerated(EnumType.STRING)
-    private UserType userType;
-    
     public enum UserType {
-        REGULAR,
-        TALENT
+        REGULAR, TALENT
     }
     
     public enum TalentCategory {
+        OTHER,
         MUSICIAN,
-        ACTRESS,
-        DANCER,
-        VISUAL_ARTIST,
-        COMEDIAN,
-        PHOTOGRAPHER,
-        MODEL,
         WRITER,
-        CHEF,
-        DJ,
+        ACTOR_ACTRESS,
+        ACTOR,
+        ACTRESS,
+        VISUAL_ARTIST,
+        PHOTOGRAPHER,
         TUTORING,
-        OTHER
+        DANCER,
+        DJ,
+        MODEL,
+        CHEF,
+        COMEDIAN;
+
+        @JsonValue
+        public String toValue() {
+            return this.name();
+        }
+
+        @JsonCreator
+        public static TalentCategory fromValue(String value) {
+            if (value == null) {
+                return null;
+            }
+            String normalizedValue = value.toUpperCase().replace("/", "_");
+            try {
+                return valueOf(normalizedValue);
+            } catch (IllegalArgumentException e) {
+                // Handle special cases
+                if (normalizedValue.contains("ACTOR") || normalizedValue.contains("ACTRESS")) {
+                    return ACTOR_ACTRESS;
+                }
+                return OTHER; // Default to OTHER if value doesn't match any enum
+            }
+        }
     }
 
     // Getters and Setters
