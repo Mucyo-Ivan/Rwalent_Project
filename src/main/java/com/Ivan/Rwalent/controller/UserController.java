@@ -86,4 +86,23 @@ public class UserController {
         Page<User> talents = userService.searchTalents(searchDTO);
         return new ResponseEntity<>(talents, HttpStatus.OK);
     }
+
+    @GetMapping("/talents/category/{category}")
+    public ResponseEntity<Page<User>> getTalentsByCategory(
+            @PathVariable String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "fullName") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDirection) {
+        
+        TalentSearchDTO searchDTO = new TalentSearchDTO();
+        searchDTO.setCategory(User.TalentCategory.fromValue(category));
+        searchDTO.setPage(page);
+        searchDTO.setSize(size);
+        searchDTO.setSortBy(sortBy);
+        searchDTO.setSortDirection(sortDirection);
+        
+        Page<User> talents = userService.searchTalents(searchDTO);
+        return new ResponseEntity<>(talents, HttpStatus.OK);
+    }
 } 
