@@ -50,9 +50,14 @@ public class ProfileServiceImpl implements ProfileService {
     public String uploadProfilePicture(User user, MultipartFile file) {
         try {
             String fileName = fileStorageUtil.storeFile(file);
-            String fileUrl = "/api/auth/profile/picture";
             
+            // Store the actual filename in the database (not the URL)
+            user.setProfilePicture(fileName);
+            
+            // We'll also keep the URL path for backward compatibility
+            String fileUrl = "/api/auth/profile/picture";
             user.setPhotoUrl(fileUrl);
+            
             userService.updateUser(user);
             
             return fileUrl;
@@ -63,9 +68,24 @@ public class ProfileServiceImpl implements ProfileService {
 
     @Override
     public Resource getProfilePicture(User user) {
-        if (user.getPhotoUrl() == null) {
-            throw new ProfilePictureNotFoundException("Profile picture not found for user: " + user.getEmail());
+        // First try to get the profile picture using the filename stored in profilePicture field
+        if (user.getProfilePicture() != null) {
+            try {
+                return fileStorageUtil.loadFileAsResource(user.getProfilePicture());
+            } catch (Exception e) {
+                // If there's an error, we'll fall back to the old method or throw an exception
+            }
         }
-        return fileStorageUtil.loadFileAsResource(user.getPhotoUrl());
+        
+        // Fallback: check if photoUrl exists but is not a URL path (legacy data)
+        if (user.getPhotoUrl() != null && !user.getPhotoUrl().startsWith("/")) {
+            try {
+                return fileStorageUtil.loadFileAsResource(user.getPhotoUrl());
+            } catch (Exception e) {
+                // Continue to the exception below
+            }
+        }
+        
+        throw new ProfilePictureNotFoundException("Profile picture not found for user: " + user.getEmail());
     }
-} 
+}
