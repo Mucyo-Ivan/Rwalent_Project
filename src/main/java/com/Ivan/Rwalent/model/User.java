@@ -52,6 +52,9 @@ public class User implements UserDetails {
     @Column(nullable = true)
     private String photoUrl;
     
+    @Column(name = "profile_picture")
+    private String profilePicture;
+    
     public enum UserType {
         REGULAR, TALENT
     }
@@ -212,5 +215,13 @@ public class User implements UserDetails {
 
     public void setUserType(UserType userType) {
         this.userType = userType;
+    }
+
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
     }
 }

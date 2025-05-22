@@ -6,6 +6,7 @@ import com.Ivan.Rwalent.dto.UserRegistrationDTO;
 import com.Ivan.Rwalent.exception.UserNotFoundException;
 import com.Ivan.Rwalent.model.User;
 import com.Ivan.Rwalent.repository.UserRepository;
+import com.Ivan.Rwalent.service.FileStorageService;
 import com.Ivan.Rwalent.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.function.Supplier;
 
@@ -24,17 +26,20 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final FileStorageService fileStorageService;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, PasswordEncoder passwordEncoder, FileStorageService fileStorageService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.fileStorageService = fileStorageService;
     }
 
     @Override
+    @Transactional
     public User registerUser(UserRegistrationDTO registrationDTO) {
         logger.info("Attempting to register user with email: {}", registrationDTO.getEmail());
-        if (existsByEmail(registrationDTO.getEmail())) {
+        if (userRepository.existsByEmail(registrationDTO.getEmail())) {
             logger.warn("Registration failed: Email already exists: {}", registrationDTO.getEmail());
             throw new RuntimeException("Email already exists");
         }
@@ -44,6 +49,12 @@ public class UserServiceImpl implements UserService {
         user.setEmail(registrationDTO.getEmail());
         user.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
         user.setUserType(registrationDTO.getUserType());
+
+        // Handle profile picture upload
+        if (registrationDTO.getProfilePicture() != null && !registrationDTO.getProfilePicture().isEmpty()) {
+            String fileName = fileStorageService.storeFile(registrationDTO.getProfilePicture(), user.getEmail());
+            user.setProfilePicture(fileName);
+        }
 
         // If user is a talent, set additional fields
         if (registrationDTO.getUserType() == User.UserType.TALENT) {
@@ -91,14 +102,6 @@ public class UserServiceImpl implements UserService {
         );
         logger.info("Found {} talents matching search criteria", results.getTotalElements());
         return results;
-    }
-
-    @Override
-    public User getUserByEmail(String email) {
-        logger.info("Getting user by email: {}", email);
-        return userRepository.findByEmail(email)
-                .orElseThrow((Supplier<UserNotFoundException>) () -> 
-                    new UserNotFoundException("User not found with email: " + email));
     }
 
     @Override

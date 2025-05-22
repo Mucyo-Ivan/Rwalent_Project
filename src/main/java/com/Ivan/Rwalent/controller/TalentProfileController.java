@@ -30,7 +30,7 @@ public class TalentProfileController {
             throw new UsernameNotFoundException("User not authenticated");
         }
         String email = authentication.getName();
-        User user = userService.getUserByEmail(email);
+        User user = userService.findUserByEmail(email);
         if (user.getUserType() != User.UserType.TALENT) {
             // Although PreAuthorize should handle this, an extra check here can be useful.
             throw new org.springframework.security.access.AccessDeniedException("Access is denied. User is not a talent.");
@@ -39,7 +39,7 @@ public class TalentProfileController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('USER') and @userService.getUserByEmail(principal.username).userType.name() == 'TALENT'")
+    @PreAuthorize("hasRole('USER') and @userService.findUserByEmail(principal.username).userType.name() == 'TALENT'")
     public ResponseEntity<TalentProfileDTO> getMyTalentProfile(Authentication authentication) {
         User talentUser = getCurrentAuthenticatedUser(authentication);
         TalentProfileDTO profileDTO = talentProfileService.getTalentProfile(talentUser);
@@ -47,7 +47,7 @@ public class TalentProfileController {
     }
 
     @PutMapping
-    @PreAuthorize("hasRole('USER') and @userService.getUserByEmail(principal.username).userType.name() == 'TALENT'")
+    @PreAuthorize("hasRole('USER') and @userService.findUserByEmail(principal.username).userType.name() == 'TALENT'")
     public ResponseEntity<TalentProfileDTO> updateMyTalentProfile(Authentication authentication, @RequestBody TalentProfileDTO talentProfileDTO) {
         User talentUser = getCurrentAuthenticatedUser(authentication);
         TalentProfileDTO updatedProfileDTO = talentProfileService.updateTalentProfile(talentUser, talentProfileDTO);

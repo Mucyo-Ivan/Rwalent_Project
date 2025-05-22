@@ -32,7 +32,7 @@ public class BookingController {
             Authentication authentication,
             @PathVariable Long talentId,
             @RequestBody BookingDTO bookingDTO) {
-        User user = userService.getUserByEmail(authentication.getName());
+        User user = userService.findUserByEmail(authentication.getName());
         BookingDTO createdBooking = bookingService.createBooking(user, talentId, bookingDTO);
         return ResponseEntity.ok(createdBooking);
     }
@@ -42,7 +42,7 @@ public class BookingController {
             Authentication authentication,
             @PathVariable Long bookingId,
             @RequestBody BookingDTO bookingDTO) {
-        User user = userService.getUserByEmail(authentication.getName());
+        User user = userService.findUserByEmail(authentication.getName());
         BookingDTO updatedBooking = bookingService.updateBooking(user, bookingId, bookingDTO);
         return ResponseEntity.ok(updatedBooking);
     }
@@ -51,21 +51,21 @@ public class BookingController {
     public ResponseEntity<BookingDTO> getBooking(
             Authentication authentication,
             @PathVariable Long bookingId) {
-        User user = userService.getUserByEmail(authentication.getName());
+        User user = userService.findUserByEmail(authentication.getName());
         BookingDTO booking = bookingService.getBooking(user, bookingId);
         return ResponseEntity.ok(booking);
     }
 
     @GetMapping("/user")
     public ResponseEntity<List<BookingDTO>> getUserBookings(Authentication authentication) {
-        User user = userService.getUserByEmail(authentication.getName());
+        User user = userService.findUserByEmail(authentication.getName());
         List<BookingDTO> bookings = bookingService.getUserBookings(user);
         return ResponseEntity.ok(bookings);
     }
 
     @GetMapping("/talent")
     public ResponseEntity<List<BookingDTO>> getTalentBookings(Authentication authentication) {
-        User user = userService.getUserByEmail(authentication.getName());
+        User user = userService.findUserByEmail(authentication.getName());
         List<BookingDTO> bookings = bookingService.getTalentBookings(user);
         return ResponseEntity.ok(bookings);
     }
@@ -74,7 +74,7 @@ public class BookingController {
     public ResponseEntity<Void> cancelBooking(
             Authentication authentication,
             @PathVariable Long bookingId) {
-        User user = userService.getUserByEmail(authentication.getName());
+        User user = userService.findUserByEmail(authentication.getName());
         bookingService.cancelBooking(user, bookingId);
         return ResponseEntity.noContent().build();
     }
@@ -87,7 +87,7 @@ public class BookingController {
         
         User talentUser;
         try {
-            talentUser = userService.getUserByEmail(authentication.getName());
+            talentUser = userService.findUserByEmail(authentication.getName());
         } catch (UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found.");
         }
@@ -106,7 +106,7 @@ public class BookingController {
             @PathVariable Long bookingId) {
         User talentUser;
         try {
-            talentUser = userService.getUserByEmail(authentication.getName());
+            talentUser = userService.findUserByEmail(authentication.getName());
         } catch (UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found.");
         }
@@ -124,7 +124,7 @@ public class BookingController {
             @PathVariable Long bookingId) {
         User talentUser;
         try {
-            talentUser = userService.getUserByEmail(authentication.getName());
+            talentUser = userService.findUserByEmail(authentication.getName());
          } catch (UsernameNotFoundException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found.");
          }

@@ -2,7 +2,6 @@ package com.Ivan.Rwalent.controller;
 
 import com.Ivan.Rwalent.dto.ProfileDTO;
 import com.Ivan.Rwalent.model.User;
-import com.Ivan.Rwalent.security.JwtUtils;
 import com.Ivan.Rwalent.service.ProfileService;
 import com.Ivan.Rwalent.service.UserService;
 import jakarta.validation.Valid;
@@ -13,50 +12,39 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/auth/profile")
-public class ProfileController {
+public class    ProfileController {
     private static final Logger logger = LoggerFactory.getLogger(ProfileController.class);
 
     private final ProfileService profileService;
     private final UserService userService;
-    private final JwtUtils jwtUtils;
 
     @Autowired
-    public ProfileController(ProfileService profileService, UserService userService, JwtUtils jwtUtils) {
+    public ProfileController(ProfileService profileService, UserService userService) {
         this.profileService = profileService;
         this.userService = userService;
-        this.jwtUtils = jwtUtils;
     }
 
     @GetMapping
-    public ResponseEntity<User> getProfile(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<ProfileDTO> getProfile() {
         logger.info("Received request to get profile");
-        try {
-            User currentUser = getCurrentUser(authHeader);
-            if (currentUser == null) {
-                logger.error("No authenticated user found");
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
-            logger.info("Returning user profile for: {}", currentUser.getEmail());
-            return ResponseEntity.ok(currentUser);
-        } catch (Exception e) {
-            logger.error("Error processing profile request: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        User currentUser = getCurrentUser();
+        logger.info("Retrieved current user: {}", currentUser.getEmail());
+        ProfileDTO profile = profileService.getProfile(currentUser);
+        logger.info("Returning profile for user: {}", currentUser.getEmail());
+        return ResponseEntity.ok(profile);
     }
 
     @PutMapping
-    public ResponseEntity<ProfileDTO> updateProfile(@Valid @RequestBody ProfileDTO profileDTO, @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<ProfileDTO> updateProfile(@Valid @RequestBody ProfileDTO profileDTO) {
         logger.info("Received request to update profile: {}", profileDTO);
-        User currentUser = getCurrentUser(authHeader);
-        if (currentUser == null) {
-            logger.error("No authenticated user found");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        User currentUser = getCurrentUser();
         logger.info("Updating profile for user: {}", currentUser.getEmail());
         ProfileDTO updatedProfile = profileService.updateProfile(currentUser, profileDTO);
         logger.info("Profile updated successfully for user: {}", currentUser.getEmail());
@@ -64,14 +52,10 @@ public class ProfileController {
     }
 
     @PostMapping("/picture")
-    public ResponseEntity<String> uploadProfilePicture(@RequestParam("file") MultipartFile file, @RequestHeader("Authorization") String authHeader) {
-        logger.info("Received request to upload profile picture. File name: {}, Size: {} bytes",
-                file.getOriginalFilename(), file.getSize());
-        User currentUser = getCurrentUser(authHeader);
-        if (currentUser == null) {
-            logger.error("No authenticated user found");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+    public ResponseEntity<String> uploadProfilePicture(@RequestParam("file") MultipartFile file) {
+        logger.info("Received request to upload profile picture. File name: {}, Size: {} bytes", 
+            file.getOriginalFilename(), file.getSize());
+        User currentUser = getCurrentUser();
         logger.info("Uploading picture for user: {}", currentUser.getEmail());
         String pictureUrl = profileService.uploadProfilePicture(currentUser, file);
         logger.info("Picture uploaded successfully for user: {}. URL: {}", currentUser.getEmail(), pictureUrl);
@@ -79,13 +63,9 @@ public class ProfileController {
     }
 
     @GetMapping("/picture")
-    public ResponseEntity<Resource> getProfilePicture(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<Resource> getProfilePicture() {
         logger.info("Received request to get profile picture");
-        User currentUser = getCurrentUser(authHeader);
-        if (currentUser == null) {
-            logger.error("No authenticated user found");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        User currentUser = getCurrentUser();
         logger.info("Retrieving picture for user: {}", currentUser.getEmail());
         Resource picture = profileService.getProfilePicture(currentUser);
         logger.info("Picture retrieved successfully for user: {}", currentUser.getEmail());
@@ -94,37 +74,12 @@ public class ProfileController {
                 .body(picture);
     }
 
-    private User getCurrentUser(String authHeader) {
-        logger.info("Getting current user from Authorization header");
-        try {
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                logger.error("Invalid or missing Authorization header");
-                return null;
-            }
-
-            String jwt = authHeader.substring(7); // Remove "Bearer " prefix
-            logger.info("Extracted JWT token");
-
-            if (!jwtUtils.validateJwtToken(jwt)) {
-                logger.error("JWT token is invalid");
-                return null;
-            }
-
-            String email = jwtUtils.extractUsername(jwt);
-            logger.info("Extracted email from JWT: {}", email);
-
-            if (email == null) {
-                logger.error("No email found in JWT token");
-                return null;
-            }
-
-            User user = userService.findUserByEmail(email);
-            logger.info("Found user: {}", user != null ? user.getEmail() : "null");
-            return user;
-
-        } catch (Exception e) {
-            logger.error("Unexpected error in getCurrentUser: {}", e.getMessage());
-            return null;
-        }
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        logger.info("Getting current user with email: {}", email);
+        User user = userService.findUserByEmail(email);
+        logger.info("Found user: {}", user != null ? user.getEmail() : "null");
+        return user;
     }
-}
+} 

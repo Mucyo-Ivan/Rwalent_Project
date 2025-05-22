@@ -11,6 +11,8 @@ import com.Ivan.Rwalent.service.NotificationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,20 +39,17 @@ public class NotificationServiceImpl implements NotificationService {
     public void createAndSendNotification(User recipient, String message, String notificationType,
                                         Long bookingId, String relatedUserName, Booking.BookingStatus newBookingStatus) {
         Notification notification = new Notification();
-        notification.setRecipient(recipient);
+        notification.setUser(recipient);
         notification.setMessage(message);
         notification.setNotificationType(notificationType);
         notification.setRelatedBookingId(bookingId);
         notification.setRelatedUserName(relatedUserName);
-        notification.setRead(false); // Explicitly set, though default
+        notification.setRead(false);
 
         Notification savedNotification = notificationRepository.save(notification);
         logger.info("Persisted notification ID: {} for user ID: {}", savedNotification.getId(), recipient.getId());
 
-        // Prepare DTO for WebSocket
         NotificationDTO wsNotificationDTO = convertToDTO(savedNotification);
-        // The 'newStatus' field in NotificationDTO might be redundant if the 'message' or 'notificationType' already conveys this.
-        // However, we'll keep it for consistency if the client expects it based on previous DTO structure.
         wsNotificationDTO.setNewStatus(newBookingStatus); 
 
         String userDestination = "/user/" + recipient.getId() + "/queue/notifications";
@@ -61,7 +60,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional(readOnly = true)
     public List<NotificationDTO> getNotificationsForUser(User user) {
-        return notificationRepository.findByRecipientOrderByCreatedAtDesc(user).stream()
+        return notificationRepository.findByUserOrderByCreatedAtDesc(user, Pageable.unpaged()).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -69,7 +68,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional(readOnly = true)
     public List<NotificationDTO> getUnreadNotificationsForUser(User user) {
-        return notificationRepository.findByRecipientAndIsReadFalseOrderByCreatedAtDesc(user).stream()
+        return notificationRepository.findByUserAndIsReadFalseOrderByCreatedAtDesc(user, Pageable.unpaged()).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
@@ -80,7 +79,7 @@ public class NotificationServiceImpl implements NotificationService {
         Notification notification = notificationRepository.findById(notificationId)
                 .orElseThrow(() -> new NotificationNotFoundException("Notification not found with ID: " + notificationId));
 
-        if (!notification.getRecipient().getId().equals(user.getId())) {
+        if (!notification.getUser().getId().equals(user.getId())) {
             throw new UnauthorizedAccessException("You are not authorized to mark this notification as read.");
         }
 
@@ -89,12 +88,60 @@ public class NotificationServiceImpl implements NotificationService {
         return convertToDTO(updatedNotification);
     }
 
+    @Override
+    @Transactional
+    public Notification createNotification(User user, String message, String type) {
+        Notification notification = new Notification();
+        notification.setUser(user);
+        notification.setMessage(message);
+        notification.setNotificationType(type);
+        return notificationRepository.save(notification);
+    }
+
+    @Override
+    public Page<Notification> getUserNotifications(User user, Pageable pageable) {
+        return notificationRepository.findByUserOrderByCreatedAtDesc(user, pageable);
+    }
+
+    @Override
+    @Transactional
+    public void markAllAsRead(User user) {
+        Page<Notification> notifications = notificationRepository.findByUserOrderByCreatedAtDesc(user, Pageable.unpaged());
+        notifications.forEach(notification -> {
+            notification.setRead(true);
+            notificationRepository.save(notification);
+        });
+    }
+
+    @Override
+    @Transactional
+    public void deleteReadNotifications(User user) {
+        notificationRepository.deleteByUserAndIsReadTrue(user);
+    }
+
+    @Override
+    public long getUnreadCount(User user) {
+        return notificationRepository.countByUserAndIsReadFalse(user);
+    }
+
+    @Override
+    @Transactional
+    public void deleteNotification(User user, Long notificationId) {
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new NotificationNotFoundException("Notification not found with ID: " + notificationId));
+
+        if (!notification.getUser().getId().equals(user.getId())) {
+            throw new UnauthorizedAccessException("You are not authorized to delete this notification.");
+        }
+
+        notificationRepository.delete(notification);
+    }
+
     private NotificationDTO convertToDTO(Notification notification) {
         NotificationDTO dto = new NotificationDTO();
         dto.setId(notification.getId());
         dto.setMessage(notification.getMessage());
         dto.setBookingId(notification.getRelatedBookingId());
-        // newStatus is not directly on Notification entity; set from parameters if needed when creating, or handle on client
         dto.setRelatedUserName(notification.getRelatedUserName());
         dto.setNotificationType(notification.getNotificationType());
         dto.setRead(notification.isRead());

@@ -12,6 +12,5 @@ public interface UserService {
     boolean existsByEmail(String email);
     Page<User> searchTalents(TalentSearchDTO searchDTO);
     User updateUser(User user);
-    User getUserByEmail(String email);
     User getUserById(Long id);
-}
+} 

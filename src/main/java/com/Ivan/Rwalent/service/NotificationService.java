@@ -1,7 +1,10 @@
 package com.Ivan.Rwalent.service;
 
 import com.Ivan.Rwalent.dto.NotificationDTO;
+import com.Ivan.Rwalent.model.Notification;
 import com.Ivan.Rwalent.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -15,6 +18,15 @@ public interface NotificationService {
 
     NotificationDTO markAsRead(User user, Long notificationId);
     
-    // Potentially a method to mark all as read
-    // void markAllAsRead(User user);
+    Notification createNotification(User user, String message, String type);
+
+    Page<Notification> getUserNotifications(User user, Pageable pageable);
+
+    void markAllAsRead(User user);
+
+    void deleteReadNotifications(User user);
+
+    void deleteNotification(User user, Long notificationId);
+
+    long getUnreadCount(User user);
 } 

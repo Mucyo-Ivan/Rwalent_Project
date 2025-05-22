@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class UserRegistrationDTO {
@@ -28,6 +29,7 @@ public class UserRegistrationDTO {
     private String serviceAndPricing;
     private String photoUrl;
     private UserType userType = UserType.REGULAR; // Default to regular user
+    private MultipartFile profilePicture;
 
     public @NotBlank(message = "Full name is required") String getFullName() {
         return fullName;
@@ -107,5 +109,13 @@ public class UserRegistrationDTO {
 
     public void setUserType(UserType userType) {
         this.userType = userType;
+    }
+
+    public MultipartFile getProfilePicture() {
+        return profilePicture;
+    }
+
+    public void setProfilePicture(MultipartFile profilePicture) {
+        this.profilePicture = profilePicture;
     }
 } 

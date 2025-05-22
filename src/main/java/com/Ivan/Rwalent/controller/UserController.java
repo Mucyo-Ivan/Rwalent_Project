@@ -8,6 +8,7 @@ import com.Ivan.Rwalent.security.JwtUtils;
 import com.Ivan.Rwalent.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -30,8 +31,8 @@ public class UserController {
         this.jwtUtils = jwtUtils;
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody UserRegistrationDTO registrationDTO) {
+    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> registerUser(@ModelAttribute UserRegistrationDTO registrationDTO) {
         try {
             User registeredUser = userService.registerUser(registrationDTO);
             return new ResponseEntity<>(registeredUser, HttpStatus.CREATED);
