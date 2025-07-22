@@ -55,6 +55,12 @@ public class User implements UserDetails {
     @Column(name = "profile_picture")
     private String profilePicture;
     
+    @Column(nullable = false)
+    private boolean enabled = true;
+    
+    @Column(name = "profile_views", nullable = false)
+    private int profileViews = 0;
+    
     public enum UserType {
         REGULAR, TALENT
     }
@@ -154,7 +160,7 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled;
     }
 
     public void setPassword(String password) {
@@ -223,5 +229,17 @@ public class User implements UserDetails {
 
     public void setProfilePicture(String profilePicture) {
         this.profilePicture = profilePicture;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public int getProfileViews() {
+        return profileViews;
+    }
+
+    public void setProfileViews(int profileViews) {
+        this.profileViews = profileViews;
     }
 }

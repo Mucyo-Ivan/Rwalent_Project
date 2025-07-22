@@ -27,11 +27,13 @@ public class ProfileServiceImpl implements ProfileService {
     @Override
     public ProfileDTO getProfile(User user) {
         ProfileDTO profileDTO = new ProfileDTO();
+        profileDTO.setId(user.getId());
         profileDTO.setFullName(user.getFullName());
         profileDTO.setEmail(user.getEmail());
         profileDTO.setPhoneNumber(user.getPhoneNumber());
         profileDTO.setLocation(user.getLocation());
         profileDTO.setProfilePictureUrl(user.getPhotoUrl());
+        profileDTO.setUserType(user.getUserType());
         return profileDTO;
     }
 

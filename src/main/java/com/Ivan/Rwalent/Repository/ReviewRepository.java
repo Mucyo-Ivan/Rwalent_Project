@@ -27,4 +27,7 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     
     // Find reviews made by a specific user about another specific user
     boolean existsByReviewerIdAndReviewedId(Long reviewerId, Long reviewedId);
+
+    @Query("SELECT r FROM Review r WHERE r.reviewed.id = :talentId")
+    List<Review> findByTalentId(@Param("talentId") Long talentId);
 }

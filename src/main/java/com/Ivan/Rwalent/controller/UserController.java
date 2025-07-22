@@ -3,9 +3,11 @@ package com.Ivan.Rwalent.controller;
 import com.Ivan.Rwalent.dto.JwtResponse;
 import com.Ivan.Rwalent.dto.LoginDTO;
 import com.Ivan.Rwalent.dto.UserRegistrationDTO;
+import com.Ivan.Rwalent.dto.UserRegistrationFormDTO;
 import com.Ivan.Rwalent.model.User;
 import com.Ivan.Rwalent.security.JwtUtils;
 import com.Ivan.Rwalent.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -31,10 +33,20 @@ public class UserController {
         this.jwtUtils = jwtUtils;
     }
 
-    @PostMapping(value = "/register", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> registerUser(@ModelAttribute UserRegistrationDTO registrationDTO) {
+    @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> registerUser(@Valid @RequestBody UserRegistrationDTO registrationDTO) {
         try {
             User registeredUser = userService.registerUser(registrationDTO);
+            return new ResponseEntity<>(registeredUser, HttpStatus.CREATED);
+        } catch (RuntimeException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    @PostMapping(value = "/register/form", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> registerUserWithForm(@Valid @ModelAttribute UserRegistrationFormDTO registrationDTO) {
+        try {
+            User registeredUser = userService.registerUserWithForm(registrationDTO);
             return new ResponseEntity<>(registeredUser, HttpStatus.CREATED);
         } catch (RuntimeException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);

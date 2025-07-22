@@ -13,36 +13,34 @@ public class Booking {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "talent_id", nullable = false)
-    private User talent;
-
-    @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "talent_id", nullable = false)
+    private User talent;
+
+    @Column(name = "booking_date", nullable = false)
     private LocalDateTime bookingDate;
 
-    @Column(nullable = false)
+    @Column(name = "duration_minutes", nullable = false)
     private Integer durationMinutes;
+
+    @Column(name = "notes")
+    private String notes;
+
+    @Column(name = "event_location")
+    private String eventLocation;
+
+    @Column(name = "agreed_price", precision = 10, scale = 2)
+    private BigDecimal agreedPrice;
+
+    @Column(name = "event_requirements")
+    private String eventRequirements;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private BookingStatus status;
-
-    @Column(length = 500) // Optional: Increase length if notes can be long
-    private String notes;
-
-    // --- New Fields --- 
-    @Column(nullable = true) // Location might be optional depending on service type
-    private String eventLocation;
-
-    @Column(precision = 10, scale = 2, nullable = true) // Price might be set later or optional
-    private BigDecimal agreedPrice;
-
-    @Column(length = 1000) // Optional: Increase length for detailed requirements
-    private String eventRequirements;
-    // --- End New Fields ---
 
     public enum BookingStatus {
         PENDING,
@@ -60,20 +58,20 @@ public class Booking {
         this.id = id;
     }
 
-    public User getTalent() {
-        return talent;
-    }
-
-    public void setTalent(User talent) {
-        this.talent = talent;
-    }
-
     public User getUser() {
         return user;
     }
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public User getTalent() {
+        return talent;
+    }
+
+    public void setTalent(User talent) {
+        this.talent = talent;
     }
 
     public LocalDateTime getBookingDate() {
@@ -92,14 +90,6 @@ public class Booking {
         this.durationMinutes = durationMinutes;
     }
 
-    public BookingStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(BookingStatus status) {
-        this.status = status;
-    }
-
     public String getNotes() {
         return notes;
     }
@@ -108,7 +98,6 @@ public class Booking {
         this.notes = notes;
     }
 
-    // --- Getters and Setters for New Fields ---
     public String getEventLocation() {
         return eventLocation;
     }
@@ -132,5 +121,12 @@ public class Booking {
     public void setEventRequirements(String eventRequirements) {
         this.eventRequirements = eventRequirements;
     }
-    // --- End Getters and Setters for New Fields ---
+
+    public BookingStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(BookingStatus status) {
+        this.status = status;
+    }
 } 

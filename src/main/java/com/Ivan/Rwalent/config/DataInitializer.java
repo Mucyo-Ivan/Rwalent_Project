@@ -42,6 +42,27 @@ public class DataInitializer implements CommandLineRunner {
         } else {
             logger.info("Meddy user already exists");
         }
+
+        // Create mugisha talent user if it doesn't exist
+        if (!userRepository.existsByEmail("mugisha@gmail.com")) {
+            logger.info("Creating mugisha talent user...");
+            User mugishaUser = new User();
+            mugishaUser.setFullName("Mugisha Talent");
+            mugishaUser.setEmail("mugisha@gmail.com");
+            mugishaUser.setPassword(passwordEncoder.encode("password123"));
+            mugishaUser.setUserType(User.UserType.TALENT);
+            mugishaUser.setPhoneNumber("+1234567890");
+            mugishaUser.setLocation("Kigali");
+            mugishaUser.setCategory(User.TalentCategory.MUSICIAN);
+            mugishaUser.setBio("Professional musician with 5 years of experience");
+            mugishaUser.setServiceAndPricing("Guitar lessons: $50/hour\nLive performance: $200/event");
+            mugishaUser.setEnabled(true);
+            
+            userRepository.save(mugishaUser);
+            logger.info("Mugisha talent user created successfully");
+        } else {
+            logger.info("Mugisha talent user already exists");
+        }
         
         logger.info("Data initialization completed");
     }

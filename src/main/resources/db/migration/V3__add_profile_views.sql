@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN profile_views INT NOT NULL DEFAULT 0; 

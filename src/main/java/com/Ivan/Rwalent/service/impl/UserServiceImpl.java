@@ -3,6 +3,7 @@ package com.Ivan.Rwalent.service.impl;
 import com.Ivan.Rwalent.dto.LoginDTO;
 import com.Ivan.Rwalent.dto.TalentSearchDTO;
 import com.Ivan.Rwalent.dto.UserRegistrationDTO;
+import com.Ivan.Rwalent.dto.UserRegistrationFormDTO;
 import com.Ivan.Rwalent.exception.UserNotFoundException;
 import com.Ivan.Rwalent.model.User;
 import com.Ivan.Rwalent.repository.UserRepository;
@@ -49,6 +50,39 @@ public class UserServiceImpl implements UserService {
         user.setEmail(registrationDTO.getEmail());
         user.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
         user.setUserType(registrationDTO.getUserType());
+        user.setEnabled(true);
+
+        // If user is a talent, set additional fields
+        if (registrationDTO.getUserType() == User.UserType.TALENT) {
+            logger.info("Registering talent user with additional fields");
+            user.setPhoneNumber(registrationDTO.getPhoneNumber());
+            user.setCategory(registrationDTO.getCategory());
+            user.setLocation(registrationDTO.getLocation());
+            user.setBio(registrationDTO.getBio());
+            user.setServiceAndPricing(registrationDTO.getServiceAndPricing());
+            user.setPhotoUrl(registrationDTO.getPhotoUrl());
+        }
+
+        User savedUser = userRepository.save(user);
+        logger.info("User registered successfully: {}", savedUser.getEmail());
+        return savedUser;
+    }
+
+    @Override
+    @Transactional
+    public User registerUserWithForm(UserRegistrationFormDTO registrationDTO) {
+        logger.info("Attempting to register user with form data, email: {}", registrationDTO.getEmail());
+        if (userRepository.existsByEmail(registrationDTO.getEmail())) {
+            logger.warn("Registration failed: Email already exists: {}", registrationDTO.getEmail());
+            throw new RuntimeException("Email already exists");
+        }
+
+        User user = new User();
+        user.setFullName(registrationDTO.getFullName());
+        user.setEmail(registrationDTO.getEmail());
+        user.setPassword(passwordEncoder.encode(registrationDTO.getPassword()));
+        user.setUserType(registrationDTO.getUserType());
+        user.setEnabled(true);
 
         // Handle profile picture upload
         if (registrationDTO.getProfilePicture() != null && !registrationDTO.getProfilePicture().isEmpty()) {
@@ -68,7 +102,7 @@ public class UserServiceImpl implements UserService {
         }
 
         User savedUser = userRepository.save(user);
-        logger.info("User registered successfully: {}", savedUser.getEmail());
+        logger.info("User registered successfully with form data: {}", savedUser.getEmail());
         return savedUser;
     }
 

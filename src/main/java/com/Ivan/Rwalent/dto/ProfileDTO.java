@@ -8,6 +8,7 @@ import lombok.Data;
 
 @Data
 public class ProfileDTO {
+    private Long id;
     @NotBlank(message = "Full name is required")
     @Size(min = 2, max = 100, message = "Full name must be between 2 and 100 characters")
     private String fullName;
@@ -23,4 +24,6 @@ public class ProfileDTO {
     private String location;
 
     private String profilePictureUrl;
+
+    private com.Ivan.Rwalent.model.User.UserType userType;
 } 

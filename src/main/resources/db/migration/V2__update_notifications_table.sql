@@ -5,6 +5,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS notifications;
 
 -- Recreate notifications table
+-- The notifications table should NOT have a recipient_username column. Only related_user_name is used in code and entity.
 CREATE TABLE notifications (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
